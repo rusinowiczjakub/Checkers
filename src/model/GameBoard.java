@@ -1,8 +1,15 @@
 package model;
 
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 public class GameBoard {
 
@@ -14,15 +21,23 @@ public class GameBoard {
     private Group pawns = new Group();
     private Field[][] fields;
     private Player player1, player2;
+    private GamePanel gamePanel;
+    private int interval;
 
     public GameBoard(Player player1, Player player2) {
         fields = new Field[WIDTH][HEIGHT];
         this.player1 = player1;
         this.player2 = player2;
+
+        gamePanel = new GamePanel(player1, player2);
     }
 
     public Parent drawBoard() {
+        VBox wrapper = new VBox();
+        wrapper.setPrefSize(WIDTH * FIELD_SIZE, HEIGHT * FIELD_SIZE + 100);
+
         Pane root = new Pane();
+
         root.setPrefSize(WIDTH * FIELD_SIZE, HEIGHT * FIELD_SIZE);
         root.getChildren().addAll(fieldsGroup, pawns);
 
@@ -38,14 +53,14 @@ public class GameBoard {
 
                 if (i <= 2 && (i + j) % 2 != 0) {
                     pawn = makePawn(PawnDefinition.BLACK, j, i);
-                    player1.addPawn(pawn);
-                    pawn.setPlayer(player1);
+                    player2.addPawn(pawn);
+                    pawn.setPlayer(player2);
                 }
 
                 if (i >= 5 && (i + j) % 2 != 0) {
                     pawn = makePawn(PawnDefinition.WHITE, j, i);
-                    player2.addPawn(pawn);
-                    pawn.setPlayer(player2);
+                    player1.addPawn(pawn);
+                    pawn.setPlayer(player1);
                 }
 
                 if (pawn != null) {
@@ -55,7 +70,11 @@ public class GameBoard {
             }
         }
 
-        return root;
+        wrapper.getChildren().addAll(root, gamePanel);
+
+        setTimer();
+
+        return wrapper;
     }
 
     private Pawn makePawn(PawnDefinition type, int x, int y) {
@@ -90,7 +109,19 @@ public class GameBoard {
                     Pawn beatenPawn = result.getPawn();
                     getFieldByIndex((toBoard(beatenPawn.getInitialX())), toBoard(beatenPawn.getInitialY())).setPawn(null);
                     pawns.getChildren().remove(beatenPawn);
-                    getNextPlayer();
+
+                    beatenPawn.getPlayer().removePawn(beatenPawn);
+                    Player nextPlayer = getNextPlayer();
+
+                    if (nextPlayer.getNickname().toUpperCase().equals(gamePanel.player1.getText())) {
+                        gamePanel.setPlayer1BeatenPawns("Pozostało pionków: " + String.valueOf(player1.getPawns().size()));
+                    }
+
+                    if (nextPlayer.getNickname().toUpperCase().equals(gamePanel.player2.getText())){
+                        gamePanel.setPlayer2BeatenPawns("Pozostało pionków: " + String.valueOf(player2.getPawns().size()));
+                    }
+
+                    setTimer();
                     break;
 
                 case NORMAL:
@@ -98,6 +129,8 @@ public class GameBoard {
                     getFieldByIndex(x0, y0).setPawn(null);
                     getFieldByIndex(newX, newY).setPawn(pawn);
                     getNextPlayer();
+
+                    setTimer();
                     break;
             }
         });
@@ -154,13 +187,54 @@ public class GameBoard {
         if (player1.hasMove()) {
             player1.setHasMove(false);
             player2.setHasMove(true);
-
+            gamePanel.player1.setFill(Color.GREY);
+            gamePanel.player2.setFill(Color.GREEN);
+            gamePanel.player1.setUnderline(false);
+            gamePanel.player2.setUnderline(true);
             return player2;
         } else {
             player2.setHasMove(false);
             player1.setHasMove(true);
-
+            gamePanel.player1.setFill(Color.GREEN);
+            gamePanel.player2.setFill(Color.GREY);
+            gamePanel.player1.setUnderline(true);
+            gamePanel.player2.setUnderline(false);
             return player1;
         }
+    }
+
+    public void setTimer() {
+        Timer timer = new Timer();
+        gamePanel.getTimer().setText(String.valueOf(interval));
+
+        Player currentPlayer = player1.hasMove() ? player1 : player2;
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+            int initialIntervalValue = interval;
+
+            public void run() {
+                Player actualPlayer = player1.hasMove() ? player1 : player2;
+
+                if(initialIntervalValue > 0)
+                {
+                    if (currentPlayer != actualPlayer) {
+                        timer.cancel();
+                    } else {
+                        Platform.runLater(() -> gamePanel.getTimer().setText(String.valueOf(initialIntervalValue)));
+                        initialIntervalValue--;
+                    }
+                } else {
+                    timer.cancel();
+                    getNextPlayer();
+                    setTimer();
+
+                }
+
+            }
+        }, 1000,1000);
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
     }
 }

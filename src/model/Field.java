@@ -13,7 +13,7 @@ public class Field extends Rectangle {
 
         relocate(x * GameBoard.FIELD_SIZE, y * GameBoard.FIELD_SIZE);
 
-        setFill(white ? Color.LIGHTGOLDENRODYELLOW : Color.DARKGREEN);
+        setFill(white ? Color.LIGHTGOLDENRODYELLOW : Color.SADDLEBROWN);
 
     }
 

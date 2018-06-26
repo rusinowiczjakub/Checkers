@@ -27,7 +27,7 @@ public class Pawn extends StackPane {
         bg.setTranslateY((GameBoard.FIELD_SIZE - GameBoard.FIELD_SIZE * 0.26 * 2) / 2 + GameBoard.FIELD_SIZE * 0.07);
 
         Ellipse pawn = new Ellipse(GameBoard.FIELD_SIZE * 0.3125, GameBoard.FIELD_SIZE * 0.26);
-        pawn.setFill(type == PawnDefinition.BLACK ? Color.DARKRED : Color.WHITE);
+        pawn.setFill(type == PawnDefinition.BLACK ? Color.DIMGREY : Color.WHITE);
         pawn.setStroke(Color.BLACK);
         pawn.setStrokeWidth(GameBoard.FIELD_SIZE * 0.03);
         pawn.setTranslateX((GameBoard.FIELD_SIZE - GameBoard.FIELD_SIZE * 0.3125 * 2) / 2);
